@@ -9,8 +9,18 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  BUREAU_ASSIGNEE
+  ORG_VICE
+  DIRECTORATE_HEAD
+  TEAM_MEMBER
+  SYSTEM_ADMIN
+}
+
 model User {
-  id    Int     @id @default(autoincrement())
-  email String  @unique
-  name  String?
+  id       String   @id @default(uuid())
+  email    String   @unique
+  password String
+  role     Role     @default(USER)
 }
