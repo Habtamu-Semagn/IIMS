@@ -20,6 +20,14 @@
     "forceConsistentCasingInFileNames": true,
     "noImplicitAny": false,
     "strictBindCallApply": false,
-    "noFallthroughCasesInSwitch": false
-  }
+    "noFallthroughCasesInSwitch": false, "baseUrl": ".",
+    "paths": {
+      "auth/*": ["auth/*"],
+      "school/*": ["school/*"],
+      "asset/*": ["asset/*"],
+      "ticket/*": ["ticket/*"],
+      "curriculum/*": ["curriculum/*"],
+      "training/*": ["training/*"]
+    }
+}
 }

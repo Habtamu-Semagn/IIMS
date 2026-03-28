@@ -1,26 +1,109 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
   provider = "postgresql"
+  url      = env("DATABASE_URL")
 }
 
-enum Role {
-  USER
-  BUREAU_ASSIGNEE
-  ORG_VICE
-  DIRECTORATE_HEAD
-  TEAM_MEMBER
-  SYSTEM_ADMIN
+model School {
+  school_id String @id @default(uuid())
+  name      String
+  region    String
+
+  it_coordinator_id String?
+  itCoordinator     User?   @relation("SchoolToCoordinator", fields: [it_coordinator_id], references: [user_id])
+
+  assets   Asset[]
+  teachers Teacher[]
+}
+
+model Asset {
+  asset_id        String   @id @default(uuid())
+  name            String
+  type            String
+  status          String
+  purchase_date   DateTime
+  warranty_expiry DateTime
+
+  school_id String
+  school    School @relation(fields: [school_id], references: [school_id])
+
+  tickets Ticket[]
+}
+
+model Ticket {
+  ticket_id         String    @id @default(uuid())
+  issue_description String
+  status            String
+  created_at        DateTime
+  resolved_at       DateTime?
+
+  asset_id String
+  asset    Asset  @relation(fields: [asset_id], references: [asset_id])
+}
+
+model Teacher {
+  teacher_id String @id @default(uuid())
+  name       String
+  email      String @unique
+
+  school_id String
+  school    School @relation(fields: [school_id], references: [school_id])
+
+  attendance   Attendance[]
+  certificates Certificate[]
+}
+
+model Training {
+  training_id String   @id @default(uuid())
+  title       String
+  date        DateTime
+  attendance  Attendance[]
+  certificates Certificate[]
+}
+model Attendance {
+  attendance_id String @id @default(uuid())
+  teacher_id    String
+  training_id   String
+  status        String
+
+  teacher  Teacher  @relation(fields: [teacher_id], references: [teacher_id])
+  training Training @relation(fields: [training_id], references: [training_id])
+}
+
+
+model Certificate {
+  certificate_id String @id @default(uuid())
+  issue_date     DateTime @default(now())
+  sha256_hash    String
+  qr_code        String
+  teacher_id     String
+  training_id    String
+
+  teacher  Teacher  @relation(fields: [teacher_id], references: [teacher_id])
+  training Training @relation(fields: [training_id], references: [training_id])
+}
+
+model Curriculum {
+  curriculum_id String    @id @default(uuid())
+  title         String
+  version       String
+  file_path     String
+  status        String    @default("Pending Approval") // Pending Approval | Approved
+  approved_by   String? // user id of admin
+  approved_at   DateTime?
+
+  created_at DateTime @default(now())
 }
 
 model User {
-  id       String   @id @default(uuid())
-  email    String   @unique
-  password String
-  role     Role     @default(USER)
+  user_id        String   @id @default(uuid())
+  name           String
+  email          String   @unique
+  password       String
+  role           String
+  managedSchools School[] @relation("SchoolToCoordinator")
 }
