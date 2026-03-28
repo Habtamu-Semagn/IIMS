@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "Certificate" ALTER COLUMN "issue_date" SET DEFAULT CURRENT_TIMESTAMP;
