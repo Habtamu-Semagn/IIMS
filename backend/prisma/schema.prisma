@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
@@ -57,12 +58,13 @@ model Teacher {
 }
 
 model Training {
-  training_id String   @id @default(uuid())
-  title       String
-  date        DateTime
-  attendance  Attendance[]
+  training_id  String        @id @default(uuid())
+  title        String
+  date         DateTime
+  attendance   Attendance[]
   certificates Certificate[]
 }
+
 model Attendance {
   attendance_id String @id @default(uuid())
   teacher_id    String
@@ -73,9 +75,8 @@ model Attendance {
   training Training @relation(fields: [training_id], references: [training_id])
 }
 
-
 model Certificate {
-  certificate_id String @id @default(uuid())
+  certificate_id String   @id @default(uuid())
   issue_date     DateTime @default(now())
   sha256_hash    String
   qr_code        String
@@ -92,17 +93,22 @@ model Curriculum {
   version       String
   file_path     String
   status        String    @default("Pending Approval") // Pending Approval | Approved
+  is_latest     Boolean   @default(false) // Add this
   approved_by   String? // user id of admin
   approved_at   DateTime?
+  approver      User?     @relation("AdminApprovals", fields: [approved_by], references: [user_id])
+  created_at    DateTime  @default(now())
 
-  created_at DateTime @default(now())
+  @@index([is_latest]) // Crucial for performance
+  @@index([title, version])
 }
 
 model User {
-  user_id        String   @id @default(uuid())
-  name           String
-  email          String   @unique
-  password       String
-  role           String
-  managedSchools School[] @relation("SchoolToCoordinator")
+  user_id             String       @id @default(uuid())
+  name                String
+  email               String       @unique
+  password            String
+  role                String
+  managedSchools      School[]     @relation("SchoolToCoordinator")
+  approvedCurriculums Curriculum[] @relation("AdminApprovals")
 }
