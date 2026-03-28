@@ -1,3 +1,4 @@
+// prisma/prisma.service.ts
 import { Injectable, OnModuleInit } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
@@ -6,6 +7,7 @@ import { Pool } from 'pg';
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit {
   constructor() {
+<<<<<<< HEAD
     // Standard Node-Postgres Pool
     const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 
@@ -15,7 +17,15 @@ export class PrismaService extends PrismaClient implements OnModuleInit {
     super({ adapter });
   }
 
+=======
+    const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+    const adapter = new PrismaPg(pool);
+
+    // The super call passes the adapter to the core engine
+    super({ adapter });
+  }
+>>>>>>> feature/bitusmaximus
   async onModuleInit() {
-    await this.$connect();
+    await this.$connect(); // This will stop throwing an error once 'generate' works
   }
 }
