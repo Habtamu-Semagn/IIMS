@@ -1,0 +1,21 @@
+{
+  "moduleFileExtensions": ["js", "json", "ts"],
+  "rootDir": ".",
+  "testEnvironment": "node",
+  "testRegex": ".e2e-spec.ts$",
+  "transform": {
+    "^.+\\.(t|j)s$": "ts-jest"
+  },
+  "modulePaths": [
+    "<rootDir>/.."
+  ],
+  
+  "moduleNameMapper": {
+    "^auth/(.*)$": "<rootDir>/../auth/$1",
+    "^school/(.*)$": "<rootDir>/../school/$1",
+    "^asset/(.*)$": "<rootDir>/../asset/$1",
+    "^ticket/(.*)$": "<rootDir>/../ticket/$1",
+    "^curriculum/(.*)$": "<rootDir>/../curriculum/$1",
+    "^training/(.*)$": "<rootDir>/../training/$1"
+  }
+}
