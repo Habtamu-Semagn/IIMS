@@ -1,19 +1,22 @@
+// jwt.strategy.ts
 import { Injectable } from '@nestjs/common';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(Strategy) {
+export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
+  // 'jwt' is the name
   constructor() {
+    // jwt.strategy.ts
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
-      secretOrKey: 'temporary-secret-key',
+      secretOrKey: process.env.JWT_SECRET || 'fallback', // <--- Add the exclamation mark here
     });
-  } // <--- This brace must close the constructor
+  }
 
   async validate(payload: any) {
-    // Passport will attach this return value to the Request object as 'req.user'
-    return payload;
+    console.log('JWT Payload decoded successfully:', payload);
+    return { userId: payload.sub, email: payload.email, role: payload.role };
   }
 }

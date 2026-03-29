@@ -13,7 +13,7 @@ export enum NotificationType {
   PUSH = 'PUSH',
 }
 
-export class SendNotificationDto {
+export class UpdateNotificationDto {
   @IsEmail()
   @IsNotEmpty()
   recipient: string;

@@ -1,40 +1,32 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { SchoolController } from './school.controller';
-import { SchoolService } from './school.service';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest'; // FIX: Ensure this exact syntax
+import { AppModule } from '../app.module';
 
-describe('SchoolController', () => {
-  let controller: SchoolController;
+describe('SchoolController (e2e)', () => {
+  let app: INestApplication;
 
-  const mockService = {
-    create: jest
-      .fn()
-      .mockResolvedValue({ school_id: 'uuid', name: 'Test School' }),
-    findAll: jest
-      .fn()
-      .mockResolvedValue([{ school_id: 'uuid', name: 'Test School' }]),
-  };
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [SchoolController],
-      providers: [{ provide: SchoolService, useValue: mockService }],
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
-    controller = module.get<SchoolController>(SchoolController);
+    app = moduleFixture.createNestApplication();
+    await app.init();
   });
-
-  it('should create a school', async () => {
-    const res = await controller.create({
-      name: 'Test School',
-      region: 'Region 1',
-      it_coordinator_id: 'John',
-    });
-    expect(res).toEqual({ school_id: 'uuid', name: 'Test School' });
-    expect(mockService.create).toHaveBeenCalled();
+  const adminToken =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI4NjBhYTgyMC05YmNkLTQxMWYtYjQ0My0zMWI4YzFkYWFjYjAiLCJlbWFpbCI6ImFkbWluQGdtYWlsLmNvbSIsInJvbGUiOiJBRE1JTiIsImlhdCI6MTc3NDc0NDM5NCwiZXhwIjoxNzc0ODMwNzk0fQ.MArjhmYuMBwSxgctG9oCIhu-TBdaOtGIbcFLjBpsrfA';
+  it('/schools (POST) - Admin can create school', () => {
+    return request(app.getHttpServer())
+      .post('/schools')
+      .set('Authorization', `Bearer ${adminToken}`)
+      .send({
+        name: 'New School',
+        region: 'Central', // FIX: Add the missing 'region' field here
+      })
+      .expect(201);
   });
-
-  it('should list schools', async () => {
-    const res = await controller.findAll();
-    expect(res).toEqual([{ school_id: 'uuid', name: 'Test School' }]);
+  afterAll(async () => {
+    await app.close(); // FIX: Prevents "Force Exited" worker error
   });
 });

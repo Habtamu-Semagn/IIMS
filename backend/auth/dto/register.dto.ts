@@ -1,7 +1,25 @@
-// backend/auth/dto/register.dto.ts
+// auth/dto/register.dto.ts
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsString,
+  MinLength,
+} from 'class-validator';
+import { Role } from '../roles.enum';
+
 export class RegisterDto {
+  @IsString()
+  @IsNotEmpty()
   name: string;
+
+  @IsEmail()
   email: string;
+
+  @IsString()
+  @MinLength(8)
   password: string;
-  role: 'admin' | 'teacher' | 'it-coordinator';
+
+  @IsEnum(Role)
+  role: Role;
 }
