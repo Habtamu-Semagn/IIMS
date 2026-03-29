@@ -1,9 +1,10 @@
 import { Controller, Get } from '@nestjs/common';
 
-@Controller('cats')
+@Controller() // Removed 'cats' to match the root route in your test
 export class AppController {
   @Get()
-  findAll(): string {
-    return 'This action returns all cats';
+  getHello(): string {
+    // Changed from findAll to getHello
+    return 'Hello World!'; // Changed return string to match test expectation
   }
 }

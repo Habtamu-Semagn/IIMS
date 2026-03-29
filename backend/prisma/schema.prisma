@@ -1,9 +1,5 @@
 generator client {
-<<<<<<< HEAD
-  provider = "prisma-client-js"
-=======
   provider        = "prisma-client-js"
->>>>>>> feature/bitusmaximus
   previewFeatures = ["driverAdapters"]
 }
 
