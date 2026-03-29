@@ -1,36 +1,28 @@
-import { Injectable } from '@nestjs/common';
+// notification/notification.service.ts
+import { Injectable, Logger } from '@nestjs/common';
 import { SendNotificationDto } from './dto/send-notification.dto';
 
 @Injectable()
 export class NotificationService {
+  private readonly logger = new Logger(NotificationService.name);
+
   async send(dto: SendNotificationDto) {
-    // Here you can integrate actual email/SMS providers
-    // For simplicity, we just log it
-    console.log(
-      `[Notification] To: ${dto.recipient} | Type: ${dto.type ?? 'EMAIL'} | Message: ${dto.message}`,
-    );
+    this.logger.log(`[NOTIFY] ${dto.recipient}: ${dto.message}`);
     return { success: true };
   }
 
-  async notifyTicketStatus(
-    teacherEmail: string,
-    ticketNumber: string,
-    status: string,
-  ) {
-    const message = `Your ticket #${ticketNumber} status changed to ${status}`;
-    return this.send({ recipient: teacherEmail, message });
+  // ✅ New Method: Fixes TrainingService Error
+  async notifyCertificateReady(email: string, title: string) {
+    return this.send({
+      recipient: email,
+      message: `Your certificate for "${title}" is ready. Download it from your dashboard.`,
+    });
   }
 
-  async notifyCurriculumApproval(
-    teacherEmail: string,
-    curriculumTitle: string,
-  ) {
-    const message = `Curriculum "${curriculumTitle}" has been approved.`;
-    return this.send({ recipient: teacherEmail, message });
-  }
-
-  async notifyCertificateIssued(teacherEmail: string, certificateId: string) {
-    const message = `Certificate issued: ${certificateId}. You can download it now.`;
-    return this.send({ recipient: teacherEmail, message });
+  async notifyTicketUpdate(email: string, id: string, status: string) {
+    return this.send({
+      recipient: email,
+      message: `Ticket #${id.slice(0, 8)} is now ${status}.`,
+    });
   }
 }
