@@ -7,12 +7,11 @@ import {
   Param,
   Body,
   UseGuards,
+  Req,
 } from '@nestjs/common';
-
 import { SchoolService } from './school.service';
 import { CreateSchoolDto } from './dto/create-school.dto';
 import { UpdateSchoolDto } from './dto/update-school.dto';
-
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -23,34 +22,32 @@ import { Role } from '../auth/roles.enum';
 export class SchoolController {
   constructor(private readonly service: SchoolService) {}
 
-  // ✅ Only ADMIN can create schools
   @Post()
   @Roles(Role.ADMIN)
   create(@Body() dto: CreateSchoolDto) {
     return this.service.create(dto);
   }
 
-  // ✅ Admin + IT Coordinator can view
   @Get()
   @Roles(Role.ADMIN, Role.IT_COORDINATOR)
-  findAll() {
-    return this.service.findAll();
+  findAll(@Req() req: any) {
+    // Pragmatic Refinement: Pass the user context to handle data scoping
+    return this.service.findAll(req.user);
   }
 
   @Get(':id')
   @Roles(Role.ADMIN, Role.IT_COORDINATOR)
-  findOne(@Param('id') id: string) {
-    return this.service.findOne(id);
+  findOne(@Param('id') id: string, @Req() req: any) {
+    // Now matches the updated service signature: (id, user)
+    return this.service.findOne(id, req.user);
   }
 
-  // ✅ Only ADMIN updates
   @Patch(':id')
   @Roles(Role.ADMIN)
   update(@Param('id') id: string, @Body() dto: UpdateSchoolDto) {
     return this.service.update(id, dto);
   }
 
-  // ✅ Only ADMIN deletes
   @Delete(':id')
   @Roles(Role.ADMIN)
   remove(@Param('id') id: string) {
