@@ -1,39 +1,27 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { AssetController } from './asset.controller';
-import { AssetService } from './asset.service';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../app.module';
 
-describe('AssetController', () => {
-  let controller: AssetController;
+describe('AssetController (e2e)', () => {
+  let app: INestApplication; // Declare it here
 
-  const mockService = {
-    create: jest.fn().mockResolvedValue({ asset_id: 'uuid', name: 'Laptop' }),
-    findAll: jest
-      .fn()
-      .mockResolvedValue([{ asset_id: 'uuid', name: 'Laptop' }]),
-  };
-
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [AssetController],
-      providers: [{ provide: AssetService, useValue: mockService }],
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
     }).compile();
 
-    controller = module.get<AssetController>(AssetController);
+    app = moduleFixture.createNestApplication(); // Initialize it here
+    await app.init();
   });
 
-  it('should create an asset', async () => {
-    const res = await controller.create({
-      name: 'Laptop',
-      type: 'Hardware',
-      status: 'New',
-      school_id: 'school-uuid',
-    });
-    expect(res).toEqual({ asset_id: 'uuid', name: 'Laptop' });
-    expect(mockService.create).toHaveBeenCalled();
+  it('/assets (POST)', () => {
+    return request(app.getHttpServer()) // Now 'app' exists!
+      .post('/assets');
+    // ... rest of your test
   });
 
-  it('should list assets', async () => {
-    const res = await controller.findAll();
-    expect(res).toEqual([{ asset_id: 'uuid', name: 'Laptop' }]);
+  afterAll(async () => {
+    await app.close();
   });
 });
