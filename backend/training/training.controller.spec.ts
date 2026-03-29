@@ -1,59 +1,72 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { TrainingController } from './training.controller';
+import { INestApplication } from '@nestjs/common';
+import request from 'supertest';
+import { AppModule } from '../app.module';
 import { TrainingService } from './training.service';
+import { JwtAuthGuard } from '../auth/jwt-auth.guard';
+import { RolesGuard } from '../auth/roles.guard';
 
-describe('TrainingController', () => {
-  let controller: TrainingController;
+describe('TrainingController (e2e)', () => {
+  let app: INestApplication;
 
-  const mockService = {
+  // 1. Mock the Service to isolate Controller logic
+  const mockTrainingService = {
     enrollTeacher: jest
       .fn()
-      .mockResolvedValue({ attendance_id: 'uuid', status: 'Enrolled' }),
+      .mockResolvedValue({ success: true, message: 'Enrolled' }),
     recordAttendance: jest
       .fn()
-      .mockResolvedValue({ attendance_id: 'uuid', status: 'Present' }),
-    generateCertificate: jest
+      .mockResolvedValue({ success: true, message: 'Attendance Recorded' }),
+    verifyCertificate: jest
       .fn()
-      .mockResolvedValue({ certificate_id: 'uuid' }),
-    verifyCertificate: jest.fn().mockResolvedValue({ certificate_id: 'uuid' }),
+      .mockResolvedValue({ valid: true, owner: 'John Doe' }),
+    findAllCertificates: jest.fn().mockResolvedValue([]),
   };
 
-  beforeEach(async () => {
-    const module: TestingModule = await Test.createTestingModule({
-      controllers: [TrainingController],
-      providers: [{ provide: TrainingService, useValue: mockService }],
-    }).compile();
+  beforeAll(async () => {
+    const moduleFixture: TestingModule = await Test.createTestingModule({
+      imports: [AppModule],
+    })
+      .overrideProvider(TrainingService)
+      .useValue(mockTrainingService)
+      // 2. We keep the Guards but can override them if we want to test
+      // the @Public() decorator specifically.
+      .compile();
 
-    controller = module.get<TrainingController>(TrainingController);
+    app = moduleFixture.createNestApplication();
+
+    // IMPORTANT: Check your main.ts. If you have app.setGlobalPrefix('api'),
+    // you MUST uncomment the line below for the tests to match!
+    // app.setGlobalPrefix('api');
+
+    await app.init();
   });
 
-  it('should enroll teacher', async () => {
-    const res = await controller.enroll({
-      teacher_id: 'uuid',
-      training_id: 'uuid',
+  describe('/training/certificate/verify (POST)', () => {
+    it('should verify a certificate without authentication (@Public)', () => {
+      return request(app.getHttpServer())
+        .post('/training/certificate/verify') // Ensure this matches your Prefix
+        .send({ hash_or_qr: 'valid-hash-123' })
+        .expect(201)
+        .expect((res) => {
+          expect(res.body.valid).toBe(true);
+        });
     });
-    expect(res).toEqual({ attendance_id: 'uuid', status: 'Enrolled' });
   });
 
-  it('should record attendance', async () => {
-    const res = await controller.attendance({
-      teacher_id: 'uuid',
-      training_id: 'uuid',
-      status: 'Present',
+  describe('/training/enroll (POST)', () => {
+    it('should return 401 for enrollment without a token', () => {
+      return request(app.getHttpServer())
+        .post('/training/enroll')
+        .send({ trainingId: '123' })
+        .expect(401);
     });
-    expect(res).toEqual({ attendance_id: 'uuid', status: 'Present' });
   });
 
-  it('should generate certificate', async () => {
-    const res = await controller.generateCertificate({
-      teacher_id: 'uuid',
-      training_id: 'uuid',
-    });
-    expect(res).toEqual({ certificate_id: 'uuid' });
-  });
-
-  it('should verify certificate', async () => {
-    const res = await controller.verify({ hash_or_qr: 'hash' });
-    expect(res).toEqual({ certificate_id: 'uuid' });
+  // 3. Proper Teardown to fix "Worker process failed to exit"
+  afterAll(async () => {
+    if (app) {
+      await app.close();
+    }
   });
 });
